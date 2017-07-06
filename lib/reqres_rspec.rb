@@ -9,6 +9,7 @@ require 'reqres_rspec/formatters/json'
 require 'reqres_rspec/formatters/pdf'
 require 'reqres_rspec/uploaders'
 require 'reqres_rspec/uploaders/amazon_s3'
+require 'pry'
 
 if defined?(RSpec) && ENV['REQRES_RSPEC'] == '1'
   collector = ReqresRspec::Collector.new
@@ -23,6 +24,9 @@ if defined?(RSpec) && ENV['REQRES_RSPEC'] == '1'
       elsif defined?(Sinatra)
         self_request = self.last_request rescue false
         self_response = self.last_response rescue false
+      elsif defined?(Hanami)
+        self_request = self.action rescue false
+        self_response = response rescue false
       end
 
       if defined?(self_request) && self_request && defined?(self_response) && self_response

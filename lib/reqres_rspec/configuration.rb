@@ -30,7 +30,7 @@ module ReqresRspec
       @root = if defined?(Rails)
         Rails.root.to_s
       else
-        raise 'REQRES_RSPEC_ROOT is not defined' if ENV['REQRES_RSPEC_ROOT'].blank?
+        raise 'REQRES_RSPEC_ROOT is not defined' if ENV['REQRES_RSPEC_ROOT'].nil?
         ENV['REQRES_RSPEC_ROOT']
       end
 

@@ -69,17 +69,19 @@ module ReqresRspec
     # collects spec data for further processing
     def collect(spec, example, request, response)
       # TODO: remove boilerplate code
-      return if request.nil? || response.nil? || !defined?(request.env)
+      return if request.nil? || response.nil? || !defined?(request.params.env)
 
       description = query_parameters = backend_parameters = 'not available'
       params = []
-      if request.env && (request_params = request.env['action_dispatch.request.parameters'])
-        if request_params['controller'] && request_params['action']
-          description = get_action_description(request_params['controller'], request_params['action'])
-          params = get_action_params(request_params['controller'], request_params['action'])
-          query_parameters = request_params.reject { |p| %w[controller action format].include? p }
-          backend_parameters = request_params.reject { |p| !%w[controller action format].include? p }
-        end
+
+      if request.params.env && (request_params = request.params)
+        action = request.class.name.split('::').last
+        controller = request.class.name.split('::')[-2]
+        description, additional_info = get_action_description(controller, action)
+        # description = request.class.to_s
+        params = get_action_params(controller, action)
+        query_parameters = request_params.to_h.reject { |p| %w[controller action format].include? p }
+        backend_parameters = request_params.to_h.reject { |p| !%w[controller action format].include? p }
       end
 
       ex_gr = spec.class.example.metadata[:example_group]
@@ -96,22 +98,22 @@ module ReqresRspec
         description: description,
         params: params,
         request: {
-          host: request.host,
-          url: request.url,
-          path: request.path.to_s.gsub('%2F', '/'),
-          symbolized_path: get_symbolized_path(request),
-          method: request.request_method,
+          host: additional_info['host'],
+          url: additional_info['host'] + additional_info['path'],
+          path: additional_info['path'],
+          symbolized_path: additional_info['host'] + additional_info['path'],
+          method: additional_info['method'],
           query_parameters: query_parameters,
           backend_parameters: backend_parameters,
-          body: request.body.read,
-          content_length: request.content_length,
+          body: request.instance_variable_get("@_body"),
+          content_length: query_parameters.to_s.size,
           content_type: request.content_type,
           headers: read_request_headers(request),
           accept: (request.accept rescue nil)
         },
         response: {
-          code: response.status,
-          body: response.body,
+          code: response.first,
+          body: response.last.last,
           headers: read_response_headers(response),
           format: format(response)
         }
@@ -166,10 +168,10 @@ module ReqresRspec
     # read and cleanup response headers
     # returns Hash
     def read_response_headers(response)
-      raw_headers = response.headers
+      raw_headers = response[1]
       headers = {}
       EXCLUDE_RESPONSE_HEADER_PATTERNS.each do |pattern|
-        raw_headers = raw_headers.reject { |h| h if h.starts_with? pattern }
+        raw_headers = raw_headers.reject { |h| h if h.start_with? pattern }
       end
       raw_headers.each do |key, val|
         headers.merge!(cleanup_header(key) => val)
@@ -178,7 +180,7 @@ module ReqresRspec
     end
 
     def format(response)
-      case response.headers['Content-Type']
+      case response[1]['Content-Type']
       when %r{text/html}
         :html
       when %r{application/json}
@@ -192,9 +194,9 @@ module ReqresRspec
     # returns Hash
     def read_request_headers(request)
       headers = {}
-      request.env.keys.each do |key|
-        if EXCLUDE_REQUEST_HEADER_PATTERNS.all? { |p| !key.starts_with? p }
-          headers.merge!(cleanup_header(key) => request.env[key])
+      request.params.env.keys.each do |key|
+        if EXCLUDE_REQUEST_HEADER_PATTERNS.all? { |p| !key.to_s.start_with? p }
+          headers.merge!(cleanup_header(key) => request.params.env[key])
         end
       end
       headers
@@ -227,11 +229,11 @@ module ReqresRspec
     # returns action comments taken from controller file
     # example TODO
     def get_action_comments(controller, action)
-      lines = File.readlines(File.join(ReqresRspec.root, 'app', 'controllers', "#{controller}_controller.rb"))
+      lines = File.readlines(File.join(ReqresRspec.root, 'app', 'controllers', "#{controller}", "#{action}.rb"))
 
       action_line = nil
       lines.each_with_index do |line, index|
-        if line.match(/\s*def #{action}/) #  def show
+        if line.match(/\s*def call/)
           action_line = index
           break
         end
@@ -239,6 +241,7 @@ module ReqresRspec
 
       if action_line
         comment_lines = []
+        request_additionals = {}
         was_comment = true
         while action_line > 0 && was_comment
           action_line -= 1
@@ -262,7 +265,7 @@ module ReqresRspec
     # example TODO
     def get_action_description(controller, action)
       comment_lines = get_action_comments(controller, action)
-
+      info = {}
       description = []
       comment_lines.each_with_index do |line, index|
         if line.match(/\s*#\s*@description/) # @description blah blah
@@ -275,10 +278,16 @@ module ReqresRspec
               break
             end
           end
+        elsif line.match(/\s*# @method/)
+          info['method'] = line.split(' ').last
+        elsif line.match(/\s*# @path/)
+          info['path'] = line.split(' ').last
+        elsif line.match(/\s*# @host/)
+          info['host'] = line.split(' ').last
         end
       end
 
-      description.join ' '
+      [description.join(' '), info]
     end
 
     # returns params action comments
@@ -297,7 +306,7 @@ module ReqresRspec
           line = line.gsub(/\A\s*#\s*@param/, '')
           line = line.gsub(/\A\s*#\s*/, '').strip
 
-          comments_raw.last << "\n" unless comments_raw.last.blank?
+          comments_raw.last << "\n" unless comments_raw.last.empty?
           comments_raw.last << line
         end
       end
@@ -322,7 +331,7 @@ module ReqresRspec
     end
 
     def cleanup_header(key)
-      key.sub(/^HTTP_/, '').underscore.split('_').map(&:capitalize).join('-')
+      key.to_s.sub(/^HTTP_/, '').underscore.split('_').map(&:capitalize).join('-')
     end
   end
 end
