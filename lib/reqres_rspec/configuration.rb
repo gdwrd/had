@@ -12,11 +12,7 @@ module ReqresRspec
   end
 
   def logger
-    @logger ||= if defined?(Rails)
-      Rails.logger
-    else
-      Logger.new(STDOUT)
-    end
+    Logger.new(STDOUT)
   end
 
   def root
@@ -27,11 +23,11 @@ module ReqresRspec
     DEFAULT_FORMATTERS = %w(html pdf json)
     def initialize
       ReqresRspec.logger.level = Logger::INFO
-      @root = if defined?(Rails)
-        Rails.root.to_s
+
+      if ENV['REQRES_RSPEC_ROOT'].nil?
+        raise 'REQRES_RSPEC_ROOT is not defined'
       else
-        raise 'REQRES_RSPEC_ROOT is not defined' if ENV['REQRES_RSPEC_ROOT'].nil?
-        ENV['REQRES_RSPEC_ROOT']
+        @root = ENV['REQRES_RSPEC_ROOT']
       end
 
       @templates_path = File.expand_path('../templates', __FILE__)
@@ -65,6 +61,5 @@ module ReqresRspec
     def amazon_s3=(config={})
       @amazon_s3.deep_merge!(config)
     end
-
   end
 end

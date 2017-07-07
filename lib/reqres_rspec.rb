@@ -16,15 +16,7 @@ if defined?(RSpec) && ENV['REQRES_RSPEC'] == '1'
 
   RSpec.configure do |config|
     config.after(:each) do |example|
-      if defined?(Rails) && process_example?(self.class.example.metadata, example)
-        self_request = self.request
-        self_request = @request if !self_request && defined?(@request)
-        self_response = self.response
-        self_response = @response if !self_response && defined?(@response)
-      elsif defined?(Sinatra)
-        self_request = self.last_request rescue false
-        self_response = self.last_response rescue false
-      elsif defined?(Hanami)
+      if defined?(Hanami)
         self_request = self.action rescue false
         self_response = response rescue false
       end
