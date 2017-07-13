@@ -4,8 +4,6 @@
 .config
 .yardoc
 Gemfile.lock
-InstalledFiles
-_yardoc
 coverage
 doc/
 lib/bundler/man
@@ -17,4 +15,3 @@ test/version_tmp
 tmp
 .idea
 .rvmrc
-

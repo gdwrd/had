@@ -1,6 +1,6 @@
 require 'coderay'
 
-module ReqresRspec
+module Had
   module Formatters
     class HTML < Base
     private
@@ -24,7 +24,7 @@ module ReqresRspec
       end
 
       def path(filename)
-        File.join(ReqresRspec.configuration.templates_path, filename)
+        File.join(Had.configuration.templates_path, filename)
       end
 
       def render(filename, arguments = {})

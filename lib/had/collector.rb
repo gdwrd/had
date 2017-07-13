@@ -1,4 +1,4 @@
-module ReqresRspec
+module Had
   class Collector
     # Contains spec values read from rspec example, request and response
     attr_accessor :records
@@ -93,7 +93,7 @@ module ReqresRspec
 
       self.records << {
         filename: prepare_filename_for(spec.class.metadata),
-        group: spec.class.metadata[:reqres_section] || section,
+        group: spec.class.metadata[:had_section] || section,
         title: example_title(spec, example),
         description: description,
         params: params,
@@ -155,7 +155,7 @@ module ReqresRspec
     private
 
     def example_title(spec, example)
-      t = prepare_description(example.metadata, :reqres_title) ||
+      t = prepare_description(example.metadata, :had_title) ||
           spec.class.example.full_description
       t.strip
     end
@@ -229,7 +229,7 @@ module ReqresRspec
     # returns action comments taken from controller file
     # example TODO
     def get_action_comments(controller, action)
-      lines = File.readlines(File.join(ReqresRspec.root, 'app', 'controllers', "#{controller}", "#{action}.rb"))
+      lines = File.readlines(File.join(Had.root, 'app', 'controllers', "#{controller}", "#{action}.rb"))
 
       action_line = nil
       lines.each_with_index do |line, index|

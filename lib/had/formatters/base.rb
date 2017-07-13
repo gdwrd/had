@@ -1,10 +1,10 @@
-module ReqresRspec
+module Had
   module Formatters
     class Base
       def initialize(records)
         @records = records
-        @output_path = ReqresRspec.configuration.output_path
-        @logger = ReqresRspec.logger
+        @output_path = Had.configuration.output_path
+        @logger = Had.logger
       end
       attr_reader :logger, :output_path, :records
 
@@ -12,7 +12,9 @@ module ReqresRspec
         cleanup
         write
       end
+
     private
+
       def write
         raise 'Not Implemented'
       end

@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'reqres_rspec/version'
+require 'had/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'reqres_rspec'
-  spec.version       = ReqresRspec::VERSION
-  spec.authors       = ['rilian']
-  spec.email         = ['dmitriyis@gmail.com']
-  spec.description   = %q{Generates API documentation in PDF, HTML, JSON, YAML format for integration tests written with RSpec}
-  spec.summary       = %q{Generates API documentation in PDF, HTML, JSON, YAML format for integration tests written with RSpec}
-  spec.homepage      = 'https://github.com/reqres-api/reqres_rspec'
+  spec.name          = 'had'
+  spec.version       = Had::VERSION
+  spec.authors       = ['nsheremet']
+  spec.email         = ['nazariisheremet@gmail.com']
+  spec.description   = %q{Had is Hanami Api Documentation gem. This gem generates API documentation for integration tests written with RSpec for Hanami}
+  spec.summary       = %q{Generates API documentation for integration tests written with RSpec for Hanami}
+  spec.homepage      = 'https://github.com/nsheremet/had'
   spec.license       = 'MIT'
 
   spec.files         = `git ls-files`.split($/)
@@ -20,7 +20,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'coderay'
   spec.add_dependency 'mime-types'
-  spec.add_dependency 'aws-sdk-core', '~> 2.0'
 
   spec.add_development_dependency 'bundler', '~> 1.3'
   spec.add_development_dependency 'rake'

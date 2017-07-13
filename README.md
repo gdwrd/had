@@ -1,11 +1,8 @@
-# ReqresRspec
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/reqres-api/reqres_rspec?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# Had
 
-Gem generates API documentation from your integration tests written with `rspec`.
+Had is Hanami Api Documentation. Gem generates API documentation from your integration tests written with `rspec` for [Hanami](https://hanamirb.org).
 
-No additional DSL needed. Beside covering rspec tests, documentation may be extended with API controller action comments in `yardoc` style.
-
-Documentation is generated in JSON, YAML, HTML, PDF formats.
+This is fork of [`reqres_rspec`](https://github.com/reqres-api/reqres_rspec) gem and worked implemantation for Hanami.
 
 ## Installation
 
@@ -13,46 +10,21 @@ Documentation is generated in JSON, YAML, HTML, PDF formats.
 
 Just add this gem to `Gemfile` of your API Application
 
-    gem 'reqres_rspec', group: :test
+    gem 'had', group: :test
 
 And then execute:
 
     $ bundle install
-    
-If necessary, add `require "reqres_rspec"` to your `spec/spec_helper.rb` file
 
-### 2) PDF generator
-
-Install `prince` http://www.princexml.com/download/ . For MacOS installation commands are
-
-```
-wget http://www.princexml.com/download/prince-10r3-macosx.tar.gz
-tar -xvf prince-10r3-macosx.tar.gz
-cd prince-10r3-macosx
-./install.sh
-```
+If necessary, add `require "had"` to your `spec/spec_helper.rb` file
 
 ## Usage
 
-by default `reqres_rspec` is not active (this may be configured!). To activate it, run `rspec` with
+by default `had` is not active (this may be configured!). To activate it, run `rspec` with
 
-`REQRES_RSPEC=1 bundle exec rspec --order=defined`
+`HAD_RUN=1 bundle exec rspec --order=defined`
 
 Documentation will be put into your application's `/doc` folder
-
-## Upload to Amazon S3
-
-Set up following environment variables
-
-```
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-AWS_REQRES_BUCKET
-```
-
-Then run
-
-`REQRES_RSPEC=1 REQRES_UPLOAD=AmazonS3 bundle exec rspec --order=defined`
 
 ### Sample controller action
 
@@ -62,14 +34,11 @@ Then run
   # @param category[title] required String Category title
   # @param category[weight] in which order Category will be shown
   # param text may also be multiline
-  def create
-    category = Category.new(create_category_params)
-
-    if category.save
-      render json: { category: category }.to_json, status: 201
-    else
-      render json: { errors: category.errors.full_messages }, status: 422
-    end
+  # @method GET
+  # @path /example/path
+  # @host example.com
+  def call(params)
+    # action code
   end
 ```
 
@@ -79,7 +48,7 @@ Each param text is started with `@param` and first word will be param name, then
 ### Sample rspec test
 
 ```ruby
-  it 'validates params', :skip_reqres do
+  it 'validates params', :skip_had do
     ...
   end
 
@@ -89,67 +58,48 @@ Each param text is started with `@param` and first word will be param name, then
     end
   end
 
-  context 'With invalid params', :skip_reqres do
+  context 'With invalid params', :skip_had do
     it 'returns errors' do
       ...
     end
   end
 ```
 
- By default all examples will be added to docs. A context of examples (`context` and `describe` blocks) or any particular examples may be excluded from docs with option `:skip_reqres`
+ By default all examples will be added to docs. A context of examples (`context` and `describe` blocks) or any particular examples may be excluded from docs with option `:skip_had`
 
  Doc will use full example description, as a title for each separate spec
 
 If you want to group examples in another way, you can do something like:
 
 ```ruby
-describe 'Something', reqres_section: 'Foo' do
-  context 'valid params', reqres_title: 'Bakes Pie' do
+describe 'Something', had_section: 'Foo' do
+  context 'valid params', had_title: 'Bakes Pie' do
     it 'works' do
       ...
     end
 
-    it 'tires baker', reqres_title: 'Tires baker' do
+    it 'tires baker', had_title: 'Tires baker' do
       ...
     end
   end
 end
 ```
 
-In this case all the `reqres_sections` can be used for grouping collected data into section, and `reqres_title` will become human readable titles:
-[![Customized titles](http://i57.tinypic.com/2581lw9.jpg)](http://i57.tinypic.com/2581lw9.jpg)
-
-### Generates documentation example
-
-[![Generated Doc](http://i44.tinypic.com/kda1pw.png)](http://i44.tinypic.com/kda1pw.png)
-[![Generated Doc](http://i39.tinypic.com/2w3p6vl.png)](http://i39.tinypic.com/2w3p6vl.png)
-
-Documentation is written in HTML format, which then converted to PDF. PDF files are textual, support search and have internal navigation links
-
 ## Configuration
 
 ```ruby
-ReqresRspec.configure do |c|
-  c.templates_path = Rails.root.join('spec/support/reqres/templates') # Path to custom templates
+Had.configure do |c|
+  c.templates_path = './spec/support/reqres/templates' # Path to custom templates
   c.output_path = 'some path' # by default it will use doc/reqres
-  c.formatters = %w(MyCustomFormatter) # List of custom formatters, these can be inherited from ReqresRspec::Formatters::HTML
+  c.formatters = %w(MyCustomFormatter) # List of custom formatters, these can be inherited from Had::Formatters::HTML
   c.title = 'My API Documentation' # Title for your documentation
-  c.amazon_s3 = {
-    credentials: {
-      access_key_id: ENV['AWS_ACCESS_KEY_ID'], # by default it will use AWS_ACCESS_KEY_ID env var
-      secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'], # by default it will use AWS_SECRET_ACCESS_KEY env var
-      region: (ENV['AWS_REGION'] || 'us-east-1'),
-    },
-    bucket: ENV['AWS_REQRES_BUCKET'], # by default it will use AWS_REQRES_BUCKET env for bucket name
-    enabled: false # Enable upload (only with REQRES_UPLOAD env var set)
-  }
 end
 ```
 
 ## Custom Formatter example
 
 ```ruby
-class CustomAPIDoc < ReqresRspec::Formatters::HTML
+class CustomAPIDoc < Had::Formatters::HTML
   private
   def write
     # Copy assets
@@ -181,20 +131,6 @@ class CustomAPIDoc < ReqresRspec::Formatters::HTML
   end
 end
 ```
-
-## Future plans
-
-1) Write documentation in YAML, JSON formats
-
-2) Add configuration (folders with API specs, default generate spec for all examples, or opt-in generation)
-
-3) Cover with tests
-
-4) Remove dependency on `rails`
-
-5) Add demo for `Rails`, `Rails API`, `Sinatra`
-
-## Contributing
 
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)

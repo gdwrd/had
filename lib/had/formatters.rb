@@ -1,18 +1,15 @@
-module ReqresRspec
+module Had
   module Formatters
     extend self
 
     def process(records)
-      formatters = ReqresRspec.configuration.formatters
+      formatters = Had.configuration.formatters
       raise 'No formatters defined' if formatters.empty?
 
       formatters.each do |fmt|
         case fmt
         when 'html'
           HTML.new(records).process
-        when 'pdf'
-          HTML.new(records).process unless formatters.include?('html')
-          Pdf.new(records).process
         when 'json'
           JSON.new(records).process
         else

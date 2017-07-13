@@ -1,4 +1,4 @@
-module ReqresRspec
+module Had
   module Formatters
     class JSON < Base
     private
