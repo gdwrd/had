@@ -77,8 +77,9 @@ module Had
       if request.params.env && (request_params = request.params)
         action = request.class.name.split('::').last
         controller = request.class.name.split('::')[-2]
-        description, additional_info = get_action_description(controller, action)
+        description = get_action_description(controller, action)
         # description = request.class.to_s
+        routes_params = get_routes_params(controller, action)
         params = get_action_params(controller, action)
         query_parameters = request_params.to_h.reject { |p| %w[controller action format].include? p }
         backend_parameters = request_params.to_h.reject { |p| !%w[controller action format].include? p }
@@ -98,11 +99,11 @@ module Had
         description: description,
         params: params,
         request: {
-          host: additional_info['host'],
-          url: additional_info['host'] + additional_info['path'],
-          path: additional_info['path'],
-          symbolized_path: additional_info['host'] + additional_info['path'],
-          method: additional_info['method'],
+          host: Had.host,
+          url: Had.host + routes_params['path'],
+          path: routes_params['path'],
+          symbolized_path: Had.host + routes_params['path'],
+          method: routes_params['method'],
           query_parameters: query_parameters,
           backend_parameters: backend_parameters,
           body: request.instance_variable_get("@_body"),
@@ -261,6 +262,23 @@ module Had
       ['not found']
     end
 
+    # returns routes information
+    # example TODO
+    def get_routes_params(controller, action)
+      lines = File.readlines(File.join(Had.root, 'config', 'routes.rb'))
+      data = {}
+
+      lines.each do |line|
+        if line.match(/\s*#{controller.downcase}##{action.downcase}/)
+          array = line.split(' ')
+          data['method'] = array[0].upcase
+          data['path'] = array[1].split("'")[1]
+        end
+      end
+
+      data
+    end
+
     # returns description action comments
     # example TODO
     def get_action_description(controller, action)
@@ -278,16 +296,10 @@ module Had
               break
             end
           end
-        elsif line.match(/\s*# @method/)
-          info['method'] = line.split(' ').last
-        elsif line.match(/\s*# @path/)
-          info['path'] = line.split(' ').last
-        elsif line.match(/\s*# @host/)
-          info['host'] = line.split(' ').last
         end
       end
 
-      [description.join(' '), info]
+      description.join(' ')
     end
 
     # returns params action comments

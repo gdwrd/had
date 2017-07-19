@@ -20,11 +20,21 @@ module Had
     configuration.root
   end
 
+  def host
+    configuration.host
+  end
+
   class Configuration
     DEFAULT_FORMATTERS = %w(html json)
 
     def initialize
       Had.logger.level = Logger::INFO
+
+      if ENV['APP_HOST'].nil?
+        @host = "example.com"
+      else
+        @host = ENV['APP_HOST']
+      end
 
       if ENV['APP_ROOT'].nil?
         raise 'APP_ROOT is not defined'
@@ -47,6 +57,6 @@ module Had
     attr_accessor :output_path
     attr_accessor :title
     attr_accessor :formatters
-    attr_reader :root
+    attr_reader :root, :host
   end
 end

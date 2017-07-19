@@ -20,7 +20,10 @@ If necessary, add `require "had"` to your `spec/spec_helper.rb` file
 
 ## Usage
 
-by default `had` is not active (this may be configured!). To activate it, run `rspec` with
+Before start you need to setup environment.
+`export APP_ROOT=/path/to/your/application` 
+
+By default `had` is not active (this may be configured!). To activate it, run `rspec` with
 
 `HAD_RUN=1 bundle exec rspec --order=defined`
 
@@ -34,9 +37,6 @@ Documentation will be put into your application's `/doc` folder
   # @param category[title] required String Category title
   # @param category[weight] in which order Category will be shown
   # param text may also be multiline
-  # @method GET
-  # @path /example/path
-  # @host example.com
   def call(params)
     # action code
   end

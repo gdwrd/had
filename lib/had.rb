@@ -1,4 +1,3 @@
-require 'pry'
 require 'had/version'
 require 'had/utils'
 require 'had/configuration'
