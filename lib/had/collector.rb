@@ -269,7 +269,7 @@ module Had
       data = {}
 
       lines.each do |line|
-        if line.match(/\s*#{controller.downcase}##{action.downcase}/)
+        if line.match(/\s*#{controller.underscore}##{action.underscore}/)
           array = line.split(' ')
           data['method'] = array[0].upcase
           data['path'] = array[1].split("'")[1]
