@@ -21,7 +21,7 @@ If necessary, add `require "had"` to your `spec/spec_helper.rb` file
 ## Usage
 
 Before start you need to setup environment.
-`export APP_ROOT=/path/to/your/application` 
+`export APP_ROOT=/path/to/your/application`
 
 By default `had` is not active (this may be configured!). To activate it, run `rspec` with
 
@@ -32,18 +32,22 @@ Documentation will be put into your application's `/doc` folder
 ### Sample controller action
 
 ```ruby
+  params do
+    required(:book).schema do
+      required(:author).filled(:str?) # This is params description
+      required(:title).filled(:str?)  # Can be empty
+    end
+  end
+
   # @description creates Category from given parameters
   # description text may be multiline
-  # @param category[title] required String Category title
-  # @param category[weight] in which order Category will be shown
+  # @param book[author] required String | You can use this params
+  # @param book[title] in which order   | if you did't using dry-validation
   # param text may also be multiline
   def call(params)
     # action code
   end
 ```
-
-Description param text is started with `@description` and may be multiline.
-Each param text is started with `@param` and first word will be param name, then optionally `required`, then optionally type (`Integer`, `String` etc), and finally param description, which may be multiline as well.
 
 ### Sample rspec test
 
@@ -133,7 +137,7 @@ end
 ```
 
 1. Fork it
-2. Create your feature branch (`git checkout -b my-new-feature`)
+2. Create your feature branch (`git checkout -b my_new_feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
+4. Push to the branch (`git push origin my_new_feature`)
 5. Create new Pull Request
