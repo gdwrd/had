@@ -305,10 +305,17 @@ module Had
     # returns params action comments
     # example TODO
     def get_action_params(controller, action)
-      comment_lines = get_action_comments(controller, action)
+      # This way using for getting params from parsing dry-validation schemes
+      params_lines = get_params_lines(controller, action)
+      comments = get_params_comments(params_lines)
 
+      return comments unless comments.empty?
+
+      # This way using for getting params form comments
+      comment_lines = get_action_comments(controller, action)
       comments_raw = []
       has_param = false
+
       comment_lines.each do |line|
         if line.match(/\s*#\s*@param/) # @param id required Integer blah blah
           has_param = true
@@ -340,6 +347,89 @@ module Had
       end
 
       comments
+    end
+
+    # return params comments parsed from params_lines
+    # example TODO
+    def get_params_comments(params_lines)
+      parent_params = nil
+      comments = []
+
+      params_lines.each do |line|
+        if line.match(/\s*(required|optional)\(:\w*\)\.\w*/) &&
+            !line.match(/\s*(required|optional)\(:\w*\)\.\w*\s(do)/)
+
+          name = line.split('(')[1].split(')')[0].tr(':', '')
+          required = line.match(/\s(required|optional)/).to_s.strip
+          description = line.match(/\s*#/) ? line.split('#').last.strip : '--'
+
+          type = if line.match(/\s*(required|optional)\(:\w*\)\.\w*\(:\w*\?\)/)
+            line.split('(')[2].split(')')[0].tr(':?', '')
+          else
+            'Any'
+          end
+
+          name = "#{parent_params}[#{name}]" unless parent_params.nil?
+
+          comments << {
+            name: name,
+            required: required,
+            type: type,
+            description: description
+          }
+        end
+
+        parent_params = false if line.match(/\s(end)/)
+
+        if line.match(/\s*(required|optional)\(:\w*\)\.\w*\s(do)/)
+          str = line.split('(')[1].split(')')[0].tr(':', '')
+
+          if parent_params.nil?
+            parent_params = str
+          else
+            parent_params = "#{parent_params}[#{str}]"
+          end
+        end
+      end
+
+      comments
+    rescue Exception
+      []
+    end
+
+    # returns dry-validations params lines
+    # example TODO
+    def get_params_lines(controller, action)
+      lines = File.readlines(File.join(Had.root, 'app', 'controllers', "#{controller.underscore}", "#{action.underscore}.rb"))
+      params_lines = []
+      params_begins = false
+      ends_left = 0
+
+      lines.each_with_index do |line, index|
+        if line.match(/\s*params do/)
+          params_lines << line
+          params_begins = true
+          ends_left += 1
+
+          next
+        end
+
+        if params_begins
+          params_lines << line
+
+          if line.match(/\s*do/)
+            ends_left += 1
+          elsif line.match(/\s*end/)
+            ends_left -= 1
+          end
+        end
+
+        params_begins = false if ends_left <= 0
+      end
+
+      params_lines
+    rescue Exception
+      {}
     end
 
     def cleanup_header(key)
