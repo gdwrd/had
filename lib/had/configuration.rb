@@ -1,4 +1,3 @@
-require 'pry'
 require 'fileutils'
 
 module Had
